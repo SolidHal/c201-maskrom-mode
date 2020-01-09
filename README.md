@@ -5,6 +5,7 @@ Overview of available tools: https://roc-rk3328-cc.readthedocs.io/en/latest/flas
 
 Open source maskrom mode writer https://github.com/rockchip-linux/rkdeveloptool
 
+cable:  D- to D-, D+ to D+ and gnd to gnd
 
 Steps: 
 Backup the coreboot/depthcharge rom
