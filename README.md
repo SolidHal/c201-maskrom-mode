@@ -16,3 +16,22 @@ see if it shows up in lsusb
 try to flash the rom with rkdevelopmentool
 
 Note if it works without battery
+
+
+
+First Test:
+setup as above
+used top c201 usb ports
+seems to need the power plugged in?
+
+shows up in lsusb!
+```
+Bus 001 Device 012: ID 2207:320a Fuzhou Rockchip Electronics Company RK3288 in Mask ROM mode
+```
+and `rkdevelopmentool` sees it!
+
+```
+$ ./rkdeveloptool ld
+DevNo=1 Vid=0x2207,Pid=0x320a,LocationID=102    Maskrom
+```
+
