@@ -1,0 +1,26 @@
+SolidHal> swiftgeek I tried out all of the RK3288_Loader images including the ones that included "uboot" in the file name. All seemed to do the same thing, or at least provided the same serial output. I tried loading up the sdboot_rk3288.img as well, guessing what memory address to use from the firefly documentation but didn't get anything to work. 
+22:05 <SolidHal> TL;DR I can get maskrom mode to dump out some information but don't have any way to move forward and actually run anything. Notes can be found here https://github.com/SolidHal/c201-maskrom-mode
+22:48 <SolidHal> swiftgeek anyway I'm not going to go too much deeper down the maskrom rabbit hole. Without additional documentation it will be hard to get anything functional. Instead I'm going to work towards a full libreboor (coreboot+depthcharge) image we can flash onto the rom from software. This will be much much less fragile than the current method of libreboot support on the c201, hopefully leading to less bricked c201s
+22:48 <SolidHal> The current libreboot for the c201 just haphazardly replaces the depthcharge in the image, which means if the c201 is running a different coreboot version than expected things will break. This is Bad.
+22:49 <SolidHal> *libreboot not libreboor lol
+
+23:31 <swiftgeek> SolidHal: it's not a rabbit hole lol
+23:33 <swiftgeek> SolidHal: the issue I have is that you seem to run tests in some remote offline location so instead figuring out it feels more like programming voyager probe
+23:34 <swiftgeek> SolidHal: did you do what manual said and loaded RK3288_Loader image from rockchip and used rkdevelop with it as documented?
+23:35 <swiftgeek> db is first step, next one should be like 
+23:35 <swiftgeek> rd
+23:35 <swiftgeek> (unless mask rom provides that then something else)
+23:37 <swiftgeek> maybe trid / trfi / trci
+23:38 <swiftgeek> there is no rabbit hole, docs are plentiful, the only missing link is example that would list/have every file used 
+23:40 <swiftgeek> at this point in time libreboot on c201pa is less documented that anything related to rkdevelop :D
+23:52 <swiftgeek> at least log points to all uboot sources for device
+23:53 <swiftgeek>  board/rockchip/common/mediaboot/sdhciBoot.c
+00:09 <swiftgeek> lol that was part of \t 
+00:09 <swiftgeek> no wonder i can't find it
+00:10 <swiftgeek> https://gist.github.com/tf0054/71ea17165fd67b13dd89bbcdb348b908
+00:10 <swiftgeek> this is random log i just found
+00:13 <swiftgeek> sadly no result on booting a thing through it 
+00:14 <swiftgeek> oh it was added much later lol
+00:22 <swiftgeek> https://raw.githubusercontent.com/nolange/rk3288-guide/master/bootloader.md this one documents sdboot
+01:02 <swiftgeek> this one even documents parts of maskrom path https://gitlab.denx.de/u-boot/custodians/u-boot-rockchip/blob/HEAD/doc/README.rockchip
+01:18 <swiftgeek> ah so * maybe rid / rfi / rci

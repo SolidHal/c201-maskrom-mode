@@ -36,6 +36,9 @@ $ ./rkdeveloptool ld
 DevNo=1 Vid=0x2207,Pid=0x320a,LocationID=102    Maskrom
 ```
 
+but none of the other read, chipinfo commands, write commands etc worked. After running the command, no output was given but the tool didn't exit. 
+
+
 loaded up the boot loader found on the xda fourms:
 
 ```
@@ -119,4 +122,210 @@ UserCapSize=1d5c000
 FwPartOffset=0 , 0
 UsbHook 594408
 powerOn 595790
+```
+
+
+After that, a test read worked!
+
+```
+./rkdeveloptool rl 0x0 0x400000  test
+Read LBA to file (100%)
+```
+
+
+Found there were specific rk3288 images on xda as well, Including a uboot image (thanks @swiftgeek)
+
+reset the device
+```
+$ rkdeveloptool rd
+Reset Device OK.
+
+```
+
+loaded up the downloadboot loader:
+
+```
+$ rkdeveloptool db For_RK3288_devices/'RK3288Loader(L)_V2.17.bin'
+Downloading bootloader succeeded.
+```
+
+and got some more serial output:
+```
+
+DDR Version 1.00 20141007
+In
+SRX
+Channel a: LPDDR3 200MHz
+MR0=0x58
+MR1=0x58
+MR2=0x58
+MR3=0x58
+MR4=0x2
+MR5=0x1
+MR6=0x5
+MR7=0x0
+MR8=0x1F
+MR9=0x1F
+MR10=0x1F
+MR11=0x1F
+MR12=0x1F
+MR13=0x1F
+MR14=0x1F
+MR15=0x1F
+MR16=0x1F
+Bus Width=32 Col=10 Bank=8 Row=15 CS=2 Die Bus-Width=32 Size=2048MB
+Channel b: LPDDR3 200MHz
+MR0=0x58
+MR1=0x58
+MR2=0x58
+MR3=0x58
+MR4=0x2
+MR5=0x1
+MR6=0x5
+MR7=0x0
+MR8=0x1F
+MR9=0x1F
+MR10=0x1F
+MR11=0x1F
+MR12=0x1F
+MR13=0x1F
+MR14=0x1F
+MR15=0x1F
+MR16=0x1F
+Bus Width=32 Col=10 Bank=8 Row=15 CS=2 Die Bus-Width=32 Size=2048MB
+OUT
+serial_init 1
+ChipType = 8
+SDC_BusRequest:  CMD=8 DATA BUSY  1609
+SDC_BusRequest:  CMD=8 DATA BUSY  1609
+SDC_BusRequest:  CMD=8 DATA BUSY  1609
+SdmmcInit=0 400
+...FlashInit enter...
+FtlMallocOffset = 8040 8000
+FtlMallocOffset = 10040 8000
+FtlMallocOffset = 11040 1000
+FtlMallocOffset = 19040 8000
+FtlMallocOffset = 1a040 1000
+1:0 0 7f7f05 22
+...NandcInit enter...
+0:1200 0 7f7f05 22
+gNandcVer = 6
+ SDC_BusRequest:  CMD=8  SDC_RESP_TIMEOUT 1778
+  SDC_BusRequest:  CMD=8  SDC_RESP_TIMEOUT 1778
+  SDC_BusRequest:  CMD=8  SDC_RESP_TIMEOUT 1778
+  SDC_BusRequest:  CMD=5  SDC_RESP_TIMEOUT 1778
+  SDC_BusRequest:  CMD=5  SDC_RESP_TIMEOUT 1778
+  SDC_BusRequest:  CMD=5  SDC_RESP_TIMEOUT 1778
+  SDC_BusRequest:  CMD=55  SDC_RESP_TIMEOUT 1778
+  SDC_BusRequest:  CMD=55  SDC_RESP_TIMEOUT 1778
+  SDC_BusRequest:  CMD=55  SDC_RESP_TIMEOUT 1778
+ mmc Ext_csd, ret=0 ,
+ Ext[226]=20, bootSize=2000, 
+                 Ext[215]=1, Ext[214]=d5, Ext[213]=c0, Ext[212]=0,cap =1d5c000 
+SdmmcInit=2 0
+BootCapSize=2000
+UserCapSize=1d5c000
+FwPartOffset=2000 , 0
+UsbHook 660880
+powerOn 661898
+```
+
+
+I tried the other images:
+```
+RK3288Loader_uboot_Apr212014_134842.bin
+RK3288Loader_uboot_Apr182014_155036.bin
+RK3288Loader_uboot_V2.17.02.bin
+```
+
+and got the same serial output as above
+
+
+rid, rfi, rci reads
+first I loaded up RK3288LoaderL_V2.17.bin
+
+```
+$ rkdeveloptool rfi
+Flash Info:
+        Manufacturer: SAMSUNG, value=00
+        Flash Size: 15032 MB
+        Block Size: 512 KB
+        Page Size: 2 KB
+        ECC Bits: 0
+        Access Time: 40
+        Flash CS: Flash<0>
+
+$ rkdeveloptool rci
+Chip Info:  41 30 32 33 20 0 0 0 0 0 0 2 0 0 0 0
+
+$ rkdeveloptool rid
+Flash ID: 45 4D 4D 43 20
+
+```
+
+tried rcb as well but it failed:
+```
+$ rkdeveloptool rcb
+Read capability Fail!
+
+```
+
+
+# Uboot building notes
+```
+sudo apt install swig gcc-arm-linux-gnueabi rkflashtool
+CROSS_COMPILE=arm-linux-gnueabi- make O=chromebook_minnie chromebook_minnie_defconfig all
+```
+put together the pieces and flashing the image
+```
+./chromebook_minnie/tools/mkimage -n rk3288 -T rkimage -d chromebook_minnie/spl/u-boot-spl.bin && \
+   cat out | openssl rc4 -K 7c4e0304550509072d2c7b38170d1711 | rkflashtool l
+
+```
+only get:
+```
+No serial driver found
+resetting ...
+```
+
+# Coreboot notes
+
+tested stock coreboot image from 4GB model on a 2GB model, did not work
+
+When testing with a libreboot image on the same 2GB model, got this:
+
+```
+coreboot-3ba8246-dirty Wed Sep  7 20:49:58 UTC 2016 bootblock starting...
+Exception handlers installed.
+Configuring PLL at ff760030 with NF = 99, NR = 2 and NO = 2 (VCO = 1188000KHz, output = 594000KHz)
+Configuring PLL at ff760020 with NF = 32, NR = 1 and NO = 2 (VCO = 768000KHz, output = 384000KHz)
+Translation table is @ ff700000
+Mapping address range [0x00000000:0x00000000) as uncached
+Creating new subtable @ff716c00 for [0xff700000:0xff800000)
+Mapping address range [0xff700000:0xff718000) as writethrough
+Configuring PLL at ff760000 with NF = 75, NR = 1 and NO = 1 (VCO = 1800000KHz, output = 1800000KHz)
+SF: Detected GD25Q32(B) with sector size 0x1000, total 0x400000
+CBFS @ 20000 size e0000
+CBFS: 'Master Header Locator' located CBFS at [20000:100000)
+CBFS: Locating 'fallback/romstage'
+CBFS: Found @ offset 80 size 59e4
+
+
+coreboot-3ba8246-dirty Wed Sep  7 20:49:58 UTC 2016 romstage starting...
+RAM Config: 2.
+Invalid RAMCODE.
+```
+
+This indicates to me that something is different between coreboot for 4GB and 2GB models
+
+
+trying to build coreboot from source with depthcharge version 4.11
+https://gist.github.com/SolidHal/3a0113201251a5943f90fc4104bc6e3a
+
+```
+git clone --recurse-submodules https://review.coreboot.org/coreboot.git
+cd coreboot
+git checkout 4.11
+git submodule update --init --checkout
+make crossgcc-arm CPUS=12
 ```
