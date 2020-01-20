@@ -271,6 +271,16 @@ Read capability Fail!
 ```
 
 
+Ram part numbers:
+2 of K4EBE304EB-EGCF
+
+16GB Flash part number:
+H26M52103FMA
+710Y
+
+25xx bios rom chip is:
+gigadevices 25q32csig
+
 # Uboot building notes
 ```
 sudo apt install swig gcc-arm-linux-gnueabi rkflashtool
@@ -327,5 +337,19 @@ git clone --recurse-submodules https://review.coreboot.org/coreboot.git
 cd coreboot
 git checkout 4.11
 git submodule update --init --checkout
-make crossgcc-arm CPUS=12
+rm -rf payloads/external/depthcharge/depthcharge
+make crossgcc-arm
+```
+
+copy the config file for depthcharge overflow
+```
+cp payloads/libpayload/configs/config.veyron payloads/libpayload/configs/config.veyron_speedy
+```
+make the Kconfig modification to `payloads/Kconfig`
+
+set the 
+
+then make
+```
+make --jobs=12
 ```
